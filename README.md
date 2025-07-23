@@ -187,6 +187,7 @@ make backup-db
 # Restaurar backup
 make restore-db BACKUP_FILE=backup_20240101_120000.sql
 
+
 # Limpiar sistema
 make clean
 
