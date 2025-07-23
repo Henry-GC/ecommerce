@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # Frontend React - Desarrollo
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce_frontend_dev
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=http://localhost:3000/api
+    restart: unless-stopped
+    networks:
+      - ecommerce_dev_network
+
+  # Backend API - Desarrollo
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce_backend_dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgres://postgres:password@postgres-dev:5432/ecommerce_dev
+    restart: unless-stopped
+    depends_on:
+      - postgres-dev
+    networks:
+      - ecommerce_dev_network
+
+  # Dashboard - Desarrollo
+  dashboard-dev:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce_dashboard_dev
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./dashboard:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    networks:
+      - ecommerce_dev_network
+
+  # RAG Service - Desarrollo
+  rag-dev:
+    build:
+      context: ./rag
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce_rag_dev
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./rag:/app
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    restart: unless-stopped
+    networks:
+      - ecommerce_dev_network
+
+  # Base de datos PostgreSQL - Desarrollo
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: ecommerce_postgres_dev
+    environment:
+      - POSTGRES_DB=ecommerce_dev
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    networks:
+      - ecommerce_dev_network
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  ecommerce_dev_network:
+    driver: bridge
